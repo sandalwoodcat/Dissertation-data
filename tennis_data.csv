@@ -7,14 +7,14 @@ Control,s2060623 ,NG,10000,5,13,18
 Control,s2063993 ,NG,3729,1,24,25
 Control,s2099724 ,G,10000,8,24,32
 Control,s2443454 ,PG,9965,5,25,30
-Breakout-Tennis,PG,s1859436 ,4206,2,24,26
-Breakout-Tennis,NG,s1893924 ,10000,6,23,29
-Breakout-Tennis,NG,s1905397 ,5175,0,24,24
-Breakout-Tennis,PG,s1916544 ,10000,9,6,15
-Breakout-Tennis,G,s1934526 ,10000,8,17,25
-Breakout-Tennis,PG,s1954039,10000,6,7,13
-Breakout-Tennis,G,s2076857 ,10000,5,19,24
-Breakout-Tennis,PG,s2097650 ,10000,5,5,10
+Breakout-Tennis,s1859436 ,PG,4206,2,24,26
+Breakout-Tennis,s1893924 ,NG,10000,6,23,29
+Breakout-Tennis,s1905397 ,NG,5175,0,24,24
+Breakout-Tennis,s1916544 ,PG,10000,9,6,15
+Breakout-Tennis,s1934526 ,G,10000,8,17,25
+Breakout-Tennis,s1954039 ,PG,10000,6,7,13
+Breakout-Tennis,s2076857 ,G,10000,5,19,24
+Breakout-Tennis,s2097650 ,PG,10000,5,5,10
 Pong-Tennis,s1807640 ,NG,5528,2,24,26
 Pong-Tennis,s1893591 ,PG,8536,4,25,29
 Pong-Tennis,s1909267,G,10000,7,21,28
