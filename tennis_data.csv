@@ -1,25 +1,25 @@
-Condition,Participant,Timesteps,Player points,Opponent points,Total points
-Control,h00350632 ,5248,3,24,27
-Control,s1538078 ,9401,2,24,26
-Control,s1745256,7478,4,24,28
-Control,s1894536 ,6942,2,24,26
-Control,s2060623 ,10000,5,13,18
-Control,s2063993 ,3729,1,24,25
-Control,s2099724 ,10000,8,24,32
-Control,s2443454 ,9965,5,25,30
-Breakout-Tennis,s1859436 ,4206,2,24,26
-Breakout-Tennis,s1893924 ,10000,6,23,29
-Breakout-Tennis,s1905397 ,5175,0,24,24
-Breakout-Tennis,s1916544 ,10000,9,6,15
-Breakout-Tennis,s1934526 ,10000,8,17,25
-Breakout-Tennis,s1954039,10000,6,7,13
-Breakout-Tennis,s2076857 ,10000,5,19,24
-Breakout-Tennis,s2097650 ,10000,5,5,10
-Pong-Tennis,s1807640 ,5528,2,24,26
-Pong-Tennis,s1893591 ,8536,4,25,29
-Pong-Tennis,s1909267,10000,7,21,28
-Pong-Tennis,s1971316 ,5873,2,24,26
-Pong-Tennis,s2088609 ,10000,14,5,19
-Pong-Tennis,s2103736 ,9150,1,24,25
-Pong-Tennis,s2177304 ,10000,2,16,18
-Pong-Tennis,s2185104 ,6621,1,24,25
+Condition,Participant, Experience,Timesteps,Player points,Opponent points,Total points
+Control,h00350632 ,G,5248,3,24,27
+Control,s1538078 ,NG,9401,2,24,26
+Control,s1745256,NG,7478,4,24,28
+Control,s1894536 ,NG,6942,2,24,26
+Control,s2060623 ,NG,10000,5,13,18
+Control,s2063993 ,NG,3729,1,24,25
+Control,s2099724 ,G,10000,8,24,32
+Control,s2443454 ,PG,9965,5,25,30
+Breakout-Tennis,PG,s1859436 ,4206,2,24,26
+Breakout-Tennis,NG,s1893924 ,10000,6,23,29
+Breakout-Tennis,NG,s1905397 ,5175,0,24,24
+Breakout-Tennis,PG,s1916544 ,10000,9,6,15
+Breakout-Tennis,G,s1934526 ,10000,8,17,25
+Breakout-Tennis,PG,s1954039,10000,6,7,13
+Breakout-Tennis,G,s2076857 ,10000,5,19,24
+Breakout-Tennis,PG,s2097650 ,10000,5,5,10
+Pong-Tennis,s1807640 ,NG,5528,2,24,26
+Pong-Tennis,s1893591 ,PG,8536,4,25,29
+Pong-Tennis,s1909267,G,10000,7,21,28
+Pong-Tennis,s1971316 ,NG,5873,2,24,26
+Pong-Tennis,s2088609 ,PG,10000,14,5,19
+Pong-Tennis,s2103736 ,G,9150,1,24,25
+Pong-Tennis,s2177304 ,G,10000,2,16,18
+Pong-Tennis,s2185104 ,G,6621,1,24,25
