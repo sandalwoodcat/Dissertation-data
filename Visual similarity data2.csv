@@ -1,22 +1,22 @@
 Game.Pairs,avg.Ratings
-1_2,0.79
-1_3,0.06
-2_3,0.06
-1_4,0.08
-2_4,0.15
-3_4,0.28
-1_5,0.10
-2_5,0.10
-3_5,0.33
-4_5,0.21
-1_6,0.12
-2_6,0.14
-3_6,0.23
-4_6,0.19
-5_6,0.32
-1_7,0.12
-2_7,0.19
-3_7,0.14
-4_7,0.17
-5_7,0.29
-6_7,0.78
+Bank Heist_Ms Pacman,0.79
+Bank Heist_Pong,0.06
+Ms Pacman_Pong,0.06
+Bank Heist_Tennis,0.08
+Ms Pacman_Tennis,0.15
+Pong_Tennis,0.28
+Bank Heist_Breakout,0.10
+Ms Pacman_Breakout,0.10
+Pong_Breakout,0.33
+Tennis_Breakout,0.21
+Bank Heist_Demon Attack,0.12
+Ms Pacman_Demon Attack,0.14
+Pong_Demon Attack,0.23
+Tennis_Demon Attack,0.19
+Breakout_Demon Attack,0.32
+Bank Heist_Assault,0.12
+Ms Pacman_Assault,0.19
+Pong_Assault,0.14
+Tennis_Assault,0.17
+Breakout_Assault,0.29
+Demon Attack_Assault,0.78
