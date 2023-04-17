@@ -1,0 +1,61 @@
+---
+title: "Visual similarity"
+author: "Angelina Ai"
+date: "2023-04-08"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+#NA and test data was removed already
+dat <- read.csv("https://raw.githubusercontent.com/sandalwoodcat/Dissertation-data/main/Visual%20similarity%20data2.csv")
+```
+
+```{r}
+library(ggplot2)
+dat$Game.Pairs <- as.factor(dat$Game.Pairs)
+```
+
+```{r}
+par(mar=c(5,5,2,2))
+
+dat %>%
+  arrange(avg.Ratings)%>%
+  ggplot(aes(x = Game.Pairs, 
+             y = avg.Ratings,
+             width  = .95,
+             fill = Game.Pairs
+             )
+         ) +
+  geom_col() +
+  ggtitle("Plot of average visual similarity ratings between game pairs (min-max normalised)")+
+  theme(
+    axis.text.x  = element_text(angle = 45,hjust = 1),
+    axis.ticks.x = element_blank()
+    )
+
+```
+
+```{r}
+rank(dat$Mean)
+```
+
+```{r}
+dat %>%
+  arrange(avg.Ratings) %>%
+  mutate(Game.Pairs=factor(Game.Pairs, levels=Game.Pairs)) %>%
+  ggplot( aes(x=Game.Pairs, y=avg.Ratings)) +
+    geom_segment( aes(xend=Game.Pairs, yend=0)) +
+    geom_point( size=4, color="orange") +
+    coord_flip() +
+  ggtitle("Ranked plot of average visual similarity ratings of game pairs \n(min-max normalised)") +
+  theme(
+    axis.text.y  = element_text(angle = 45,hjust = 1),
+    axis.ticks.y = element_blank()
+    )
+  xlab("")
+```
+

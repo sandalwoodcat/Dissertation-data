@@ -1,0 +1,409 @@
+---
+title: "Data analysis with outliers"
+author: "Angelina Ai"
+date: "2023-04-08"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(tidyverse)
+library(rsample)
+library(tidyr)
+library(sjPlot)
+library(kableExtra)
+library(modelsummary)
+library(ggplot2)
+library(patchwork)
+library(AICcmodavg)
+library(dplyr)
+```
+
+
+
+
+
+
+#--------------------------------Descriptive stats-----------------------
+
+#Import data from github
+```{r}
+df <- read.csv("https://raw.githubusercontent.com/sandalwoodcat/Dissertation-data/main/tennis_data.csv")
+df$Condition <- as.factor(df$Condition)
+df$Condition <- relevel(df$Condition, ref = "Control")
+```
+Descriptive data (diss)
+
+#Descriptive Statistics Table
+```{r}
+datasummary(All(df) ~ Heading(Mean + SD + Min + Median + Max) +  Condition * (Mean + SD),
+              data = df, 
+            title = "Descriptive statistics of Scores of Tennis") %>%
+  kable_classic(full_width = F, html_font = "Times New Roman") 
+```
+
+#Create a function for z-scores
+```{r}
+z <- function(x, na.rm = TRUE) {
+  return((x-mean(x))/sd(x))
+}
+```
+
+#some calculations just to make lives easier.
+```{r}
+df$Minutes <- df$Timesteps/8/60
+df$Player.rate <- df$Player.points/df$Minutes
+df$Opponent.rate <- df$Minutes/df$Opponent.points
+```
+
+#Create a function for the composite score (CS)
+```{r}
+CS.Tennis <- function(df) {
+  CS <- z(df$Player.rate)*(df$Player.points/df$Total.points) + z(df$Opponent.rate)*(df$Opponent.points/df$Total.points)
+  return(CS)
+}
+df$CS.T <- CS.Tennis(df)
+```
+
+#Boxplot: Tennis composite scores by condition
+```{r}
+ggplot(data = df, aes(x = Condition, y = CS.T, colour = Condition)) +
+  geom_boxplot()
+```
+
+```{r}
+Q1 <- quantile(df$CS.T, 0.25)
+Q3 <- quantile(df$CS.T, 0.75)
+IQR <- Q3 - Q1
+outliers <- which(df$CS.T < Q1 - 1.5*IQR | df$CS.T > Q3 +1.5*IQR)
+outliers
+```
+
+
+
+
+#Histogram to see the distribution of data
+```{r}
+par(mar=c(5,5,2,2))
+h1 <- hist(df$CS.T,col = "bisque2", breaks = 10, main = " ", xlab = "CS")
+h1
+```
+
+```{r}
+df$logCS.T = log(df$CS.T + 1)
+df$logCS.T
+```
+
+```{r}
+h2 <- hist(df$logCS.T, col = "azure2", breaks = 10, main = " ", xlab = "log(CS)")
+h2
+```
+
+```{r}
+par(mfrow=c(1,2))
+h1
+h2
+```
+
+```{r}
+m <- lm(logCS.T~Condition,data = df)
+summary(m)
+```
+
+
+
+#Import Pong data
+```{r}
+id2 <- "1HzfUdh_1-5IZ2S_xFUNoosku1Px3wWNs"
+dfP <- read.csv(sprintf("https://docs.google.com/uc?id=%s&export=download", id2))
+```
+
+#Calculate the CS for Pong.
+```{r}
+dfP$Minutes <- dfP$Timesteps/8/60
+dfP$Player.rate <- dfP$Player.points/dfP$Minutes
+dfP$Opponent.rate <- dfP$Minutes/dfP$Opponent.points
+```
+
+```{r}
+CS.Pong <- function(dfP) {
+  CS <- z(dfP$Player.rate)*(dfP$Player.points/dfP$Total.points) + z(dfP$Opponent.rate)*(dfP$Opponent.points/dfP$Total.points)
+  return(CS)
+}
+dfP$CS.P <- CS.Pong(dfP)
+```
+
+#Import Breakout data
+```{r}
+id3 <- "1GoZ5vwa5Z-0LPoidGapW9JqoocGExrvu"
+dfB <- read.csv(sprintf("https://docs.google.com/uc?id=%s&export=download", id3))
+```
+
+#Calculate the z-scores of Breakout
+```{r}
+dfB$Zscore <- z(dfB$Points)
+```
+
+
+
+
+
+#--------------------------First hypothesis------------------------
+
+#Create a dataframe containg participants' scores in the first game.
+```{r}
+Participant <- c(df$Participant[9:24])
+Experience <- c(df$Experience[9:24])
+Tennis <- c(df$logCS.T[9:24])
+Condition <- c(df$Condition[9:24])
+First <- c(dfB$Zscore, dfP$CS.P)
+df2 <- data.frame(Participant, Experience, Condition, Tennis, First)
+df2$Condition <- as.factor(df2$Condition)
+df2$Experience <- as.factor((df2$Experience))
+```
+
+
+#Visualisation of participants' performance change from the first game to Tennis
+```{r}
+df_visual <- df2 %>%
+  pivot_longer(cols=c('First', 'Tennis'),
+               names_to = 'Game',
+               values_to = 'Scores')
+df_visual$Condition <- as.factor(df_visual$Condition)
+df_visual$Game <- as.factor(df_visual$Game)
+```
+
+```{r}
+df_visual %>%
+  ggplot(
+    aes(
+      Game, Scores,
+      group = Participant,
+      color = Condition
+    )
+  ) +
+  geom_line(size = 1) + 
+  facet_grid(
+    ~Condition
+  ) +
+  theme(
+    axis.title.x = element_blank(),
+    legend.position = "none"
+  )
+```
+
+
+```{r}
+cond.mod <- lm(Tennis~Condition, data = df2)
+first.mod <- lm(Tennis~First, data = df2)
+exp.mod <- lm(Tennis~Experience, data = df2)
+
+cond.first <- lm(Tennis~Condition + First, data = df2)
+comb.mod <- lm(Tennis~Condition + First + Experience, data = df2)
+int.mod <- lm(Tennis~Condition*First*Experience, data = df2)
+
+
+mods <- list(cond.mod, first.mod, exp.mod, cond.first, comb.mod, int.mod)
+mod.names <- c('cond.mod', 'first.mod', 'exp.mod', 'cond.first', 'comb.mod', 'int.mod')
+aictab(cand.set = mods, modnames = mod.names)
+```
+
+
+```{r}
+summary(cond.first)
+```
+
+#bca bias correction for assumptions violation
+```{r}
+library(car)
+
+set.seed(7)
+boot <- Boot(cond.first, R=1000)
+summary(boot)
+```
+
+```{r}
+ci <- confint(boot)
+ci
+```
+
+
+
+
+
+#-----------------------------H1 Assumption Check---------------------------
+
+```{r}
+par(mfrow = c(2, 2))
+
+# Use plot() function to create diagnostic plots
+plot(first.mod)
+```
+
+```{r}
+par(mfrow = c(1,2))
+plot(cond.first, 4)
+plot(cond.first, 5)
+```
+
+# assumption check afeter removing the highly influential case. Assumptions are still not met, possibly because of the small sample size, natural variation can identified as highly influential outlier and affect the correlation between variables.
+```{r}
+df3 <- df2[-6,]
+
+```
+
+```{r}
+adj.m <- lm(Tennis~First, data = df3)
+summary(adj.m)
+```
+
+```{r}
+par(mfrow = c(2, 2))
+
+plot(adj.m)
+```
+
+
+
+
+
+
+#----------------------------Descriptive stats (moves)-------------------
+#Import data
+```{r}
+id4 <- "1LgP4uy82kDyxEYzxplx5SA2QnboyqWNZ"
+moves <- read.csv(sprintf("https://docs.google.com/uc?id=%s&export=download", id4))
+```
+
+```{r}
+moves$Condition <- as.factor(moves$Condition)
+```
+
+```{r}
+levels(moves$Condition) <- c("Control", "Breakout-Tennis", "Pong-Tennis")
+moves
+```
+
+```{r}
+datasummary(All(moves) ~ Heading(Mean + SD + Min + Median + Max) +  Condition * (Mean + SD), data = moves,
+            title = "Descriptive statistics of movements",
+            notes = c('If two keys were pressed simultaneously we add the counts to each of the two keys. For example, if "Up" and "Left" were pressed simultaneously, it would be recorded as pressing "UpLeft". We would then manually add the number of "UpLeft" counts to "Left" counts and "Up" counts separately.')) %>%
+  kable_classic(full_width = F, html_font = "Times New Roman") 
+```
+
+```{r}
+moves <- moves%>%
+  mutate(Ratio = ((Up.moves + Down.moves) / (Left.moves + Right.moves)), .before = Total.moves)
+moves
+```
+
+
+
+#--------------------------Second Hypothesis--------------------------------
+```{r}
+# Because for moves we are interested in whether there is a difference between UpDown:LeftRight ratio when ppts were trained with games that only allowed either Up&Down or Left&Right movements, ANOVA is used to test whether there are significant differences in the mean of ratio across the 3 conditions.
+model1 <- aov(Ratio ~ Condition, data = moves)
+model.exp <-aov(Ratio ~ Experience, data = moves)
+model.cont <- aov(Ratio ~ Condition + Experience, data = moves)
+model.int <- aov(Ratio ~ Condition * Experience, data = moves)
+
+aovs <- list(model1, model.exp, model.cont, model.int)
+aovs.names <- c('model1', 'model.exp', 'model.cont', 'model.int')
+aictab(cand.set = aovs, modnames = aovs.names)
+```
+
+
+
+
+```{r}
+par(mfrow = c(1, 1))
+
+par(mar = c(4.1, 12, 8, 4))
+
+thsd1 <- TukeyHSD(model1, "Condition", ordered = TRUE)
+# We found a statistically-significant difference in the ratio of UpDown to LeftRight movements made according to condition type (F = 3.882, p < 0.05). However, A Tukey post-hoc test showed that the pairwise differences were not significant.
+
+plot(thsd1, las = 1)
+
+```
+
+```{r}
+par(mar = c(4.1, 4, 4.1, 1.5))
+thsd2 <- TukeyHSD(model.exp, "Experience", ordered = TRUE)
+# We found a statistically-significant pairwise difference in the ratio of UpDown to LeftRight movements of PG and NG groups(p<0.05). Indicate a significant difference between the movements made by people who never or are casual gamers and regular gamers. 
+
+plot(thsd2, las = 1)
+```
+
+
+
+```{r}
+model2 <- lm(Ratio ~ Condition, data = moves)
+summary(model2)
+```
+
+```{r}
+dev.off()
+ggplot(data = moves, aes(x = Condition, y = Ratio, colour = Condition)) +
+  geom_boxplot()
+```
+
+```{r}
+par(mfrow = c(2, 2))
+
+# Use plot() function to create diagnostic plots
+plot(model.exp)
+```
+
+```{r}
+plot(model1)
+```
+#YES
+
+
+```{r}
+
+# Create data frame for ggplot
+df4 <- data.frame(fitted = model2$fitted.values,
+                 residuals = model2$residuals)
+
+# Pearson residuals plot
+p1 <- ggplot(df4, aes(x = fitted, y = residuals)) +
+  geom_point(color="steelblue")+
+  geom_hline(aes(yintercept=0),color="#F8766D")+
+  labs(x = "Fitted values", y = "Residuals") +
+  theme_bw()
+
+# QQ plot of Pearson residuals
+p2 <- ggplot(df4, aes(sample = residuals)) +
+  geom_qq(color="steelblue") +
+  stat_qq_line(color="#F8766D") +
+  labs(x = "Theoretical quantiles", y = "Residuals") +
+  theme_bw()
+
+# Combine the plots
+gridExtra::grid.arrange(p1, p2, ncol = 2)
+```
+
+
+
+
+
+# Create a table for thematic analysis
+```{r}
+id5 <- "186taHMfLQYn0XmG8KfJT9A4zrgpazzgx"
+CA <- read.csv(sprintf("https://docs.google.com/uc?id=%s&export=download", id5))
+```
+
+```{r}
+CA %>%
+  kbl(caption = "Thematic analysis results of participants' responses about their strategy") %>%
+  kable_classic(full_width = F, html_font = "Times New Roman")
+
+```
+
+
+

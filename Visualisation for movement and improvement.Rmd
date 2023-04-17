@@ -1,0 +1,177 @@
+---
+title: "Dissertation data analysis"
+author: "Ibi"
+date: "2023-04-03"
+output: word_document
+---
+
+```{r, include=FALSE}
+library(tidyverse)
+library(tidytext)
+library(dplyr)
+library(dabestr)
+library(car)
+```
+
+
+```{r, echo=FALSE}
+## load in tennis_data (with improvement)
+id <- "1GKLtgTvJ18mlyAhmBpHVCTebtRbkYibN"
+df2 <- read.csv(sprintf("https://docs.google.com/uc?id=%s&export=download", id))
+```
+
+## Plot of time between losses over the game (facet wrapped per participants)
+
+```{r, echo=FALSE}
+library(tidyr)
+df3 <- data.frame(Condition = df2$Condition, Participants = df2$Participant, Losses = df2$Losses)
+df3$Losses <- gsub("\\[|\\]", "", df3$Losses)
+df3 <- separate_rows(df3,Losses,sep=",\\s+")
+
+df3$Losses <- as.numeric(df3$Losses)
+
+```
+
+```{r, echo=FALSE}
+
+df3 <- df3 %>% mutate(points_bin = cut(Losses, breaks=c(0, 1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000, 9000, 10000)))
+
+df3 <- df3 %>%
+   group_by(Participants) %>%
+    mutate(Losses_diff = Losses - lag(Losses))
+
+df3 <- df3 %>%
+  group_by(Participants) %>%
+  mutate(Losses_diff = replace_na(Losses_diff, min(Losses)))
+
+```
+
+
+```{r, echo=FALSE}
+library(dplyr)
+
+df3$points_bin <- as.factor(df3$points_bin)
+levels(df3$points_bin)
+```
+
+
+```{r, echo=FALSE}
+library(ggplot2)
+
+ df3 %>%
+  ggplot(
+    aes(
+      points_bin, Losses_diff/8, group = 1, colour = Condition
+    )
+  ) +
+  geom_point() +
+  geom_smooth(method = 'lm', formula  = y ~ poly(x,2)) +
+  facet_wrap(
+    ~Condition,
+    ncol = 3 
+  ) +   
+   theme(
+    axis.title.x = element_text(margin = margin(t = 0, r = 20, b = 0, l = 0))) +
+   scale_x_discrete(labels=c("(0,1e+03]" = "1", "(1e+03,2e+03]" = "2","(2e+03,3e+03]" = "3", "(3e+03,4e+03]" = "4", "(4e+03,5e+03]" = "5", "(5e+03,6e+03]" = "6", "(6e+03,7e+03]" = "7", "(7e+03,8e+03]" = "8", "(8e+03,9e+03]" = "9", "(9e+03,1e+04]" = "10")) + 
+   ggtitle("Plot of improvement in participants' defending performance between conditions") +
+   xlab("Playtime (1000-frame increment)") + 
+   ylab("Time between losses (in seconds)")
+```
+
+#Leave the hypothesis for Improvement two-tailed
+
+
+```{r, echo=FALSE, warning=FALSE}
+
+
+df3 %>%
+  ggplot(
+    aes(
+      points_bin, Losses_diff/8, group = 1, 
+    )
+  ) +
+  geom_point() +
+  geom_smooth(method = 'lm', se = FALSE) +
+  facet_wrap(
+    ~Participants,
+    ncol = 7, 
+    scales = 'free_y'
+  ) +
+  theme(
+    axis.title.x = element_text(margin = margin(t = 0, r = 20, b = 0, l = 0))) +
+   scale_x_discrete(labels=c("(0,1e+03]" = "1", "(1e+03,2e+03]" = "2",
+                              "(2e+03,3e+03]" = "3", "(3e+03,4e+03]" = "4", "(4e+03,5e+03]" = "5", "(5e+03,6e+03]" = "6", "(6e+03,7e+03]" = "7", "(7e+03,8e+03]" = "8", "(8e+03,9e+03]" = "9", "(9e+03,1e+04]" = "10")) +
+  ggtitle("Plot of improvement in participants' defending performance between participants") +
+   xlab("Playtime (1000-frame increment)") + 
+   ylab("Time between losses (in seconds)")
+
+  
+```
+
+## Comparison of moves between conditions 
+
+```{r, echo=FALSE}
+
+move_tbl <- df2 %>% group_by(Condition) %>% 
+  summarise(mean_UP=mean(Up.moves, na.rm = TRUE),
+            mean_DOWN=mean(Down.moves, na.rm = TRUE),
+            mean_LEFT=mean(Left.moves, na.rm = TRUE),
+            mean_RIGHT=mean(Right.moves, na.rm = TRUE),
+            mean_UPLEFT=mean(Up.left.moves, na.rm = TRUE),
+            mean_UPRIGHT=mean(Up.right.moves, na.rm = TRUE),
+            mean_DOWNLEFT=mean(Down.left.moves, na.rm = TRUE),
+            mean_DOWNRIGHT=mean(Down.right.moves, na.rm = TRUE))
+
+move_tbl 
+```
+
+```{r, echo=FALSE}
+## Load in tennis_move_data
+id2 <- "1T_R5Fzz7ya1gak5iNrsfouR0uFJBLLQD"
+moves <- read.csv(sprintf("https://docs.google.com/uc?id=%s&export=download", id2))
+
+colnames(moves)[4] = "UPDOWN"
+colnames(moves)[5] = "LEFTRIGHT"
+moves$UPDOWN <- gsub("\\[|\\]", "", moves$UPDOWN)
+moves$LEFTRIGHT <- gsub("\\[|\\]", "", moves$LEFTRIGHT)
+moves <- separate_rows(moves,UPDOWN, LEFTRIGHT, sep=",\\s+")
+
+moves$UPDOWN <- as.numeric(moves$UPDOWN)
+moves$LEFTRIGHT <- as.numeric(moves$LEFTRIGHT)
+```
+```{r}
+moves$Condition <- as.factor(moves$Condition)
+levels(moves$Condition) <- c("Control", "Breakout-Tennis", "Pong-Tennis")
+
+
+moves <- moves %>%
+  group_by(Participant) %>%
+  mutate(round = row_number())
+moves
+```
+
+
+
+
+```{r, echo=FALSE}
+library(ggplot2)
+moves %>%
+  ggplot(
+    aes(
+      round, UPDOWN/LEFTRIGHT, group = 1, colour = Condition)
+  ) +
+  geom_point() + 
+  geom_smooth(method = 'lm') +
+  facet_wrap(
+    ~Condition,
+    ncol = 3, 
+  ) +
+  theme(
+    axis.title.x = element_text(margin = margin(t = 0, r = 20, b = 0, l = 0))) +
+   scale_x_discrete(labels=c("1" = "1000", "2" = "2000",
+                              "3" = "3000", "4" = "4000", "5" = "5000", "6" = "6000", "7" = "7000", "8" = "8000", "9" = "9000", "10" = "10000")) +
+   ggtitle("Plot of ratio of UpDown movements to LeftRight movements between conditions") +
+   xlab("Playtime (1000-frame increment)")
+```
+
+
